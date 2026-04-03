@@ -6,18 +6,23 @@ import { Cs2RconService } from '../services/cs2.rcon.service';
 export class Cs2Controller {
   constructor(private readonly rconService: Cs2RconService) {}
 
+  //Poder escribir comandos, como si estuviéramos escribiendo en el cmd del server.
   @Post('cmd')
   async sendCustomCommand(@Body('command') command: string) {
     const result = await this.rconService.executeCommand(command);
     return { success: true, output: result };
   }
 
-  @Post('start-match')
-  async startMatch() {
-    await this.rconService.executeCommand(
-      'matchzy_loadmatch_url "http://127.0.0.1:3000/match/1"'
-    );
-
-    return { message: 'Match cargado correctamente' };
+  //Este endpoint recibe eventos en tiempo real de Matchzy (round_ended, por ejemplo).
+  @Post('events')
+  async receiveMatchEvent() {
+    
   }
+
+  //Este endpoint recibe un JSON completo de Matchzy con muchos datos, cada vez que se termina un mapa.
+  @Post('report')
+  async receiveMatchReport() {
+
+  }
+
 }
