@@ -9,8 +9,7 @@ export class Cs2Controller {
   //Poder escribir comandos, como si estuviéramos escribiendo en el cmd del server.
   @Post('cmd')
   async sendCustomCommand(@Body('command') command: string) {
-    const result = await this.rconService.executeCommand(command);
-    return { success: true, output: result };
+    return await this.rconService.executeCommand(command);
   }
 
   //Este endpoint recibe eventos en tiempo real de Matchzy (round_ended, por ejemplo).
@@ -28,7 +27,7 @@ export class Cs2Controller {
   async receiveMatchReport() {
 
   }
-  
+
   //DEMO: Recibir la demo de un mapa, cuando este se termina.
   @Post('demos/upload')
   async receiveDemo() {
