@@ -19,9 +19,19 @@ export class Cs2Controller {
     
   }
 
-  //Este endpoint recibe un JSON completo de Matchzy con muchos datos, cada vez que se termina un mapa.
+  /*
+    RECEPCIÓN DE DATOS AL FINALIZAR UN MAPA: STATS & DEMO
+  */
+
+  //STATS: Este endpoint recibe un JSON completo de Matchzy con muchos datos, cada vez que se termina un mapa.
   @Post('report')
   async receiveMatchReport() {
+
+  }
+  
+  //DEMO: Recibir la demo de un mapa, cuando este se termina.
+  @Post('demos/upload')
+  async receiveDemo() {
 
   }
 
