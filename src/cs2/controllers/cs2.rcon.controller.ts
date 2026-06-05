@@ -1,10 +1,13 @@
-import { Controller, Post, Get, Body, Param, Res, HttpStatus, HttpCode, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Res, HttpStatus, HttpCode, Headers, UnauthorizedException, Logger } from '@nestjs/common';
 import type { Response } from 'express';
 import { Cs2LifecycleService } from '../services/cs2.lifecycle.service';
 import { Cs2RconService } from '../services/cs2.rcon.service';
 
 @Controller('cs2')
 export class Cs2Controller {
+
+  private readonly logger = new Logger(Cs2Controller.name);
+
   constructor(
     private readonly cs2LifecycleService: Cs2LifecycleService,
     private readonly rconService: Cs2RconService
@@ -65,5 +68,20 @@ export class Cs2Controller {
     console.log(JSON.stringify(eventData, null, 2));
     
     return { received: true };
+  }
+
+  /**
+   * ENDPOINT 4: El servidor de CS2 avisa que ya cargó el mapa y el plugin está activo
+   */
+  @Post('server-ready')
+  @HttpCode(HttpStatus.OK)
+  async handleServerReady(@Body() body: { matchId: string; port: number }) {
+    this.logger.log(`[Webhook] ¡El servidor de CS2 en el puerto ${body.port} avisó que está LISTO!`);
+    
+    // Disparar la inyección de RCON de forma inmediata, sin esperar ningún timeout fijo
+    // Ejecutamos la lógica que antes estaba en el setTimeout
+    this.cs2LifecycleService.ejecutarInyeccionMatchZy(body.matchId, body.port);
+    
+    return { status: 'acknowledged' };
   }
 }
