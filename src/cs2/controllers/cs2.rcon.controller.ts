@@ -63,9 +63,36 @@ export class Cs2Controller {
       throw new UnauthorizedException('Falta el token de autorización o es inválido');
     }
     
-    // Acá procesás los datos (Kills, cambios de estado de torneo, etc.)
-    console.log('--- [EVENTO RECIBIDO DESDE MATCHZY] ---');
-    console.log(JSON.stringify(eventData, null, 2));
+    const { event, matchid } = eventData;
+    const gamePort = eventData.port || 27015; // Usamos el puerto que venga, o 27015 por defecto
+
+    // Imprimimos CADA evento que llegue para debugar en vivo en la consola
+    this.logger.log(`[Webhook MatchZy] Evento recibido: "${event}" para MatchID: ${matchid}`);
+
+
+    // CASO 1: Terminó la serie completa
+    if (event === 'series_end') {
+      console.log(`--- [EVENTO] SERIE FINALIZADA (MatchID: ${matchid}) ---`);
+      this.cs2LifecycleService.marcarSerieTerminada(matchid);
+    }
+
+    // CASO 2: La demo terminó de grabarse en disco
+    if (event === 'demo_recording_stop') {
+      console.log(`--- [EVENTO] DEMO GRABADA EN DISCO (MatchID: ${matchid}) ---`);
+      
+      // Validamos si la serie ya había terminado previamente
+      if (this.cs2LifecycleService.debeApagarServidor(matchid)) {
+        console.log(`[Webhook] La serie ya terminó y la demo está guardada. Mandando 'quit' vía RCON al puerto ${gamePort}...`);
+        
+        // Le damos un delay ínfimo de 1 segundo para asegurarnos de que el hilo de MatchZy
+        // complete el ciclo de cerrado del archivo antes de desconectarse
+        setTimeout(async () => {
+          await this.rconService.executeCommand('quit', gamePort);
+        }, 1000);
+      } else {
+        console.log(`[Webhook] Se guardó la demo, pero falta resolver mapa o serie. El servidor se mantiene vivo.`);
+      }
+    }
     
     return { received: true };
   }

@@ -14,6 +14,34 @@ export class Cs2LifecycleService {
     private readonly rconService: Cs2RconService,
   ) {}
 
+
+  /*
+    CIERRE DE SERVIDOR
+  */
+  // Guardamos en memoria los matchid que ya enviaron el evento de cierre de serie
+  private seriesFinalizadas = new Set<number>();
+
+  /**
+   * Registra que la serie llegó a su fin (ej: el 2-0 del BO3)
+   */
+  marcarSerieTerminada(matchId: number): void {
+    this.seriesFinalizadas.add(matchId);
+    this.logger.log(`[Lifecycle] MatchID ${matchId} anotado como SERIE_FINALIZADA. Esperando detención de la demo...`);
+  }
+
+  /**
+   * Revisa si la serie ya había terminado. Si es así, limpia la memoria y da luz verde para apagar.
+   */
+  debeApagarServidor(matchId: number): boolean {
+    if (this.seriesFinalizadas.has(matchId)) {
+      this.seriesFinalizadas.delete(matchId); // Limpiamos memoria
+      return true;
+    }
+    return false;
+  }
+
+
+
   /**
    * Genera el JSON de configuración en la carpeta cfg del servidor de CS2 y levanta el ejecutable dedicado
    */
