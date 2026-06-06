@@ -15,9 +15,10 @@ export class Cs2Controller {
 
     /*
     TODOS:
-    • EVENTS: Este endpoint recibe eventos en tiempo real de Matchzy (round_ended, por ejemplo).
-    • REPORT: Este endpoint recibe un JSON completo de Matchzy con muchos datos, cada vez que se termina un mapa.
-    • DEMO: Recibir la demo de un mapa, cuando este se termina.
+    • REPORT: Si le pegás a este endpoint con los datos correctos, te devuelve datos completos de un mapa / serie.
+              El evento demo_recording_stop indica que se terminó un mapa, y series_end indica que se terminó una serie.
+    • DEMO: Si le pegás a este endpoint con los datos correctos, te devuelve el archivo demo de un mapa, cuando este se termina.
+            Las demos se guardan por defecto en server/game/csgo/MatchZy.
   */
 
   //Poder escribir comandos, como si estuviéramos escribiendo en el cmd del server.
@@ -110,5 +111,23 @@ export class Cs2Controller {
     this.cs2LifecycleService.ejecutarInyeccionMatchZy(body.matchId, body.port);
     
     return { status: 'acknowledged' };
+  }
+
+  /**
+   * ENDPOINT 5: Restaurar una ronda específica por problemas técnicos
+   */
+  @Post('restore-round')
+  async restoreRound(
+    @Body('port') port: number,
+    @Body('matchid') matchid: number,
+    @Body('roundNumber') roundNumber: number
+  ) {
+    //Formateamos el nombre estándar que usa MatchZy para sus archivos de respaldo
+    //Los backups están en server/game/csgo/MatchZyDataBackup
+    const backupFileName = `matchzy_match_${matchid}_round_${roundNumber}`;
+    const command = `matchzy_loadbackup ${backupFileName}`;
+    
+    this.logger.warn(`[Soporte Técnico] Restaurando ronda ${roundNumber} en el puerto ${port}...`);
+    return await this.rconService.executeCommand(command, port);
   }
 }
